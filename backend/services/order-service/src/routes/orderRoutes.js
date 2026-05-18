@@ -60,4 +60,21 @@ router.patch('/:id/status', authGuard, requireRole('admin'), [
   validate,
 ], orderController.updateOrderStatus);
 
+// ─── Internal service-to-service route ───────────────────────────────────────
+// Called by payment-service after Stripe webhook events.
+// Protected by a shared service secret (NOT a user JWT).
+const requireServiceSecret = (req, res, next) => {
+  const secret = req.headers['x-service-secret'];
+  if (!secret || secret !== process.env.SERVICE_SECRET) {
+    return res.status(401).json({ success: false, message: 'Unauthorized' });
+  }
+  next();
+};
+
+router.patch('/internal/:id/status',
+  requireServiceSecret,
+  [param('id').isUUID(), body('status').notEmpty(), validate],
+  orderController.updateOrderStatus
+);
+
 module.exports = router;

@@ -183,9 +183,73 @@ services:
       redis:
         condition: service_healthy
 
+  # --- Phase 3 Services ---
+
+  postgres_payments:
+    image: postgres:16-alpine
+    container_name: ecommerce_pg_payments
+    environment:
+      POSTGRES_DB: ecommerce_payments
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-devpassword}
+    volumes:
+      - pg_payments_data:/var/lib/postgresql/data
+    ports:
+      - "5436:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  payment-service:
+    build:
+      context: ../backend/services/payment-service
+      dockerfile: Dockerfile
+    container_name: ecommerce_payments
+    ports:
+      - "3005:3005"
+    environment:
+      NODE_ENV: development
+      PORT: 3005
+      DB_HOST: postgres_payments
+      DB_PORT: 5432
+      DB_NAME: ecommerce_payments
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD:-devpassword}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-dev_access_secret_change_in_production}
+      SERVICE_SECRET: ${SERVICE_SECRET:-dev_service_secret_change_in_production}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      ORDER_SERVICE_URL: http://order-service:3003
+      NOTIFICATION_SERVICE_URL: http://notification-service:3006
+      CORS_ORIGIN: http://localhost:5173
+    depends_on:
+      postgres_payments:
+        condition: service_healthy
+
+  notification-service:
+    build:
+      context: ../backend/services/notification-service
+      dockerfile: Dockerfile
+    container_name: ecommerce_notifications
+    ports:
+      - "3006:3006"
+    environment:
+      NODE_ENV: development
+      PORT: 3006
+      SERVICE_SECRET: ${SERVICE_SECRET:-dev_service_secret_change_in_production}
+      SMTP_HOST: ${SMTP_HOST:-smtp.mailtrap.io}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@ecommerce.local}
+      CORS_ORIGIN: http://localhost:5173
+
 # Named volumes — data persists across docker-compose down/up
 volumes:
   pg_auth_data:
   pg_products_data:
   pg_orders_data:
+  pg_payments_data:
   redis_data:
