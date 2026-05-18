@@ -7,7 +7,9 @@ import useAuthStore from '../store/authStore';
  * - On 401, attempts a silent token refresh then retries once.
  */
 const api = axios.create({
-  baseURL: '/api',
+  // In development: '/api' is proxied by Vite to localhost:8080 (nginx gateway).
+  // In production:  VITE_API_BASE_URL points to the Railway gateway public URL.
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
   withCredentials: true, // send HttpOnly refresh-token cookie
 });
 

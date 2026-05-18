@@ -25,7 +25,11 @@ const ApiResponse = require('../utils/apiResponse');
 const REFRESH_COOKIE_OPTIONS = {
   httpOnly: true,        // Not accessible via document.cookie (XSS protection)
   secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-  sameSite: 'strict',    // CSRF protection
+  // In production the frontend (Vercel) and backend (Railway) are on different
+  // domains, so 'strict' blocks the cookie entirely. 'none' + secure=true
+  // allows cross-origin cookies (requires HTTPS, which Railway provides).
+  // In development both run on localhost so 'lax' is safe and sufficient.
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
   path: '/api/auth',     // Cookie is only sent to auth routes
 };
