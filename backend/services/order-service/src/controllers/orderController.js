@@ -63,12 +63,22 @@ const orderController = {
   // Admin only
   async getAllOrders(req, res, next) {
     try {
-      const orders = await orderService.getAllOrders({
+      const result = await orderService.getAllOrders({
         page: parseInt(req.query.page) || 1,
         limit: parseInt(req.query.limit) || 20,
         status: req.query.status,
       });
-      return ApiResponse.success(res, 200, 'All orders fetched', { orders });
+      return ApiResponse.success(res, 200, 'All orders fetched', result);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  // Admin only
+  async getStats(req, res, next) {
+    try {
+      const stats = await orderService.getStats();
+      return ApiResponse.success(res, 200, 'Stats fetched', { stats });
     } catch (error) {
       next(error);
     }

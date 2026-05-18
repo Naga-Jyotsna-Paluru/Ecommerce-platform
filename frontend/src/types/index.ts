@@ -25,23 +25,23 @@ export interface Product {
   name: string;
   slug: string;
   description: string;
-  price: string;       // DECIMAL returned as string from pg
-  stock: number;
+  price: string;            // DECIMAL returned as string from pg
+  stock_quantity: number;
   images: string[];
   tags: string[];
-  isActive: boolean;
-  category?: Category;
-  createdAt: string;
+  is_active: boolean;
+  category_id?: string;
+  category_name?: string;
+  category_slug?: string;
+  created_at: string;
 }
 
 export interface PaginatedProducts {
-  data: Product[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+  products: Product[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 // ─── Cart ─────────────────────────────────────────────────────────────────────

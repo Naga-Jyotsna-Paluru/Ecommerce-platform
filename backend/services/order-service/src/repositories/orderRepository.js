@@ -147,8 +147,14 @@ const orderRepository = {
     }
 
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-    params.push(limit, offset);
 
+    const countResult = await pool.query(
+      `SELECT COUNT(*) FROM orders o ${where}`,
+      params.slice(0, conditions.length)
+    );
+    const total = parseInt(countResult.rows[0].count, 10);
+
+    params.push(limit, offset);
     const result = await pool.query(
       `SELECT o.id, o.user_id, o.status, o.total_amount, o.created_at
        FROM orders o
@@ -158,7 +164,23 @@ const orderRepository = {
       params
     );
 
-    return result.rows;
+    return { orders: result.rows, total, page, limit, totalPages: Math.ceil(total / limit) };
+  },
+
+  async getStats() {
+    const result = await pool.query(
+      `SELECT
+         COUNT(*)                                         AS total_orders,
+         COALESCE(SUM(total_amount), 0)                  AS total_revenue,
+         COUNT(*) FILTER (WHERE status = 'pending')      AS pending,
+         COUNT(*) FILTER (WHERE status = 'confirmed')    AS confirmed,
+         COUNT(*) FILTER (WHERE status = 'processing')   AS processing,
+         COUNT(*) FILTER (WHERE status = 'shipped')      AS shipped,
+         COUNT(*) FILTER (WHERE status = 'delivered')    AS delivered,
+         COUNT(*) FILTER (WHERE status = 'cancelled')    AS cancelled
+       FROM orders`
+    );
+    return result.rows[0];
   },
 };
 

@@ -9,6 +9,10 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import OrdersPage from './pages/OrdersPage';
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminProductsPage from './pages/admin/AdminProductsPage';
+import AdminOrdersPage from './pages/admin/AdminOrdersPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,11 +38,20 @@ export default function App() {
               <Route path="/login"          element={<LoginPage />} />
               <Route path="/register"       element={<RegisterPage />} />
 
-              {/* Protected â€” any logged-in user */}
+              {/* Protected — any logged-in user */}
               <Route element={<ProtectedRoute />}>
                 <Route path="/cart"     element={<CartPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/orders"   element={<OrdersPage />} />
+              </Route>
+
+              {/* Admin only */}
+              <Route element={<ProtectedRoute requiredRole="admin" />}>
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index                element={<AdminDashboardPage />} />
+                  <Route path="products"      element={<AdminProductsPage />} />
+                  <Route path="orders"        element={<AdminOrdersPage />} />
+                </Route>
               </Route>
 
               {/* 404 fallback */}

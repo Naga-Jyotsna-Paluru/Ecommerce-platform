@@ -142,6 +142,10 @@ const orderService = {
     return orderRepository.findAll(filters);
   },
 
+  async getStats() {
+    return orderRepository.getStats();
+  },
+
   /**
    * Update order status with lifecycle validation.
    * Prevents illegal transitions (e.g., delivered → pending).

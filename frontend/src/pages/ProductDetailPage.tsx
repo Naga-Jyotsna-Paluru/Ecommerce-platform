@@ -17,7 +17,7 @@ export default function ProductDetailPage() {
 
   const { data: product, isLoading, isError } = useQuery({
     queryKey: ['product', slug],
-    queryFn: () => productsApi.getBySlug(slug!).then((r) => r.data.data),
+    queryFn: () => productsApi.getBySlug(slug!).then((r) => r.data.data.product),
     enabled: !!slug,
   });
 
@@ -57,9 +57,9 @@ export default function ProductDetailPage() {
 
         {/* Info */}
         <div className="flex flex-col gap-4">
-          {product.category && (
+          {product.category_name && (
             <span className="text-xs text-indigo-600 font-semibold uppercase tracking-wide">
-              {product.category.name}
+              {product.category_name}
             </span>
           )}
           <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
@@ -68,8 +68,8 @@ export default function ProductDetailPage() {
 
           {/* Stock */}
           <p className="text-sm text-gray-500">
-            {product.stock > 0
-              ? <span className="text-green-600 font-medium">In stock ({product.stock} available)</span>
+            {product.stock_quantity > 0
+              ? <span className="text-green-600 font-medium">In stock ({product.stock_quantity} available)</span>
               : <span className="text-red-500 font-medium">Out of stock</span>}
           </p>
 
@@ -83,7 +83,7 @@ export default function ProductDetailPage() {
           )}
 
           {/* Quantity + Add to cart */}
-          {product.stock > 0 && (
+          {product.stock_quantity > 0 && (
             <div className="flex items-center gap-3 mt-2">
               <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
                 <button
@@ -92,7 +92,7 @@ export default function ProductDetailPage() {
                 >−</button>
                 <span className="px-4 py-2 text-sm font-medium">{quantity}</span>
                 <button
-                  onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
+                  onClick={() => setQuantity((q) => Math.min(product.stock_quantity, q + 1))}
                   className="px-3 py-2 text-gray-600 hover:bg-gray-50"
                 >+</button>
               </div>

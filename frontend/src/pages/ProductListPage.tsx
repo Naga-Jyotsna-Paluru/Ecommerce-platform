@@ -23,12 +23,12 @@ function ProductCard({ product }: { product: Product }) {
       </div>
       <div className="p-4">
         <p className="text-xs text-indigo-600 font-medium uppercase tracking-wide mb-1">
-          {product.category?.name ?? 'General'}
+          {product.category_name ?? 'General'}
         </p>
         <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 mb-2">{product.name}</h3>
         <div className="flex items-center justify-between">
           <span className="text-lg font-bold text-gray-900">₹{parseFloat(product.price).toFixed(2)}</span>
-          {product.stock === 0 && (
+          {product.stock_quantity === 0 && (
             <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">Out of stock</span>
           )}
         </div>
@@ -107,19 +107,19 @@ export default function ProductListPage() {
       ) : (
         <>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {data?.data.map((product) => (
+            {data?.products?.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
 
-          {data?.data.length === 0 && (
+          {data?.products?.length === 0 && (
             <div className="text-center text-gray-500 py-16">No products found.</div>
           )}
 
           {/* Pagination */}
-          {data && data.pagination.totalPages > 1 && (
+          {data && (data.totalPages ?? 0) > 1 && (
             <div className="flex justify-center gap-2 mt-8">
-              {Array.from({ length: data.pagination.totalPages }, (_, i) => i + 1).map((page) => (
+              {Array.from({ length: data.totalPages }, (_, i) => i + 1).map((page) => (
                 <button
                   key={page}
                   onClick={() => setFilters((f) => ({ ...f, page }))}

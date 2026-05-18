@@ -48,10 +48,9 @@ const createOrderValidation = [
 // Customer routes
 router.post('/',      authGuard, createOrderValidation, validate, orderController.createOrder);
 router.get('/my',     authGuard, orderController.getMyOrders);
-router.get('/:id',    authGuard, [param('id').isUUID(), validate], orderController.getOrderById);
-router.patch('/:id/cancel', authGuard, [param('id').isUUID(), validate], orderController.cancelOrder);
 
-// Admin routes
+// Admin routes — must be declared BEFORE /:id to avoid Express matching /stats as an id param
+router.get('/stats',      authGuard, requireRole('admin'), orderController.getStats);
 router.get('/',           authGuard, requireRole('admin'), orderController.getAllOrders);
 router.patch('/:id/status', authGuard, requireRole('admin'), [
   param('id').isUUID(),
@@ -59,6 +58,9 @@ router.patch('/:id/status', authGuard, requireRole('admin'), [
     .withMessage('Invalid status value'),
   validate,
 ], orderController.updateOrderStatus);
+
+router.get('/:id',    authGuard, [param('id').isUUID(), validate], orderController.getOrderById);
+router.patch('/:id/cancel', authGuard, [param('id').isUUID(), validate], orderController.cancelOrder);
 
 // ─── Internal service-to-service route ───────────────────────────────────────
 // Called by payment-service after Stripe webhook events.
