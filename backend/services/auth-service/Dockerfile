@@ -20,7 +20,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install all deps (including dev) for the build stage
-RUN npm ci --frozen-lockfile
+RUN npm install --omit=dev
 
 # Stage 2: Production image
 FROM node:20-alpine AS production

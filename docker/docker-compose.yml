@@ -95,7 +95,7 @@ services:
 
   auth-service:
     build:
-      context: ./backend/services/auth-service
+      context: ../backend/services/auth-service
       dockerfile: Dockerfile
     container_name: ecommerce_auth
     ports:
@@ -114,13 +114,10 @@ services:
     depends_on:
       postgres_auth:
         condition: service_healthy
-    volumes:
-      - ./backend/services/auth-service:/app
-      - /app/node_modules   # Preserve container node_modules
 
   product-service:
     build:
-      context: ./backend/services/product-service
+      context: ../backend/services/product-service
       dockerfile: Dockerfile
     container_name: ecommerce_products
     ports:
@@ -141,7 +138,7 @@ services:
 
   order-service:
     build:
-      context: ./backend/services/order-service
+      context: ../backend/services/order-service
       dockerfile: Dockerfile
     container_name: ecommerce_orders
     ports:
@@ -155,6 +152,7 @@ services:
       DB_USER: postgres
       DB_PASSWORD: ${DB_PASSWORD:-devpassword}
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-dev_access_secret_change_in_production}
+      SERVICE_SECRET: ${SERVICE_SECRET:-dev_service_secret_change_in_production}
       PRODUCT_SERVICE_URL: http://product-service:3002
       CORS_ORIGIN: http://localhost:5173
     depends_on:
