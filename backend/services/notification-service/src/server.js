@@ -1,7 +1,8 @@
 require('dotenv').config();
-const createApp   = require('./app');
-const emailService = require('./services/emailService');
-const logger      = require('./utils/logger');
+const createApp      = require('./app');
+const emailService   = require('./services/emailService');
+const orderConsumer  = require('./consumers/orderConsumer');
+const logger         = require('./utils/logger');
 
 const PORT = process.env.PORT || 3006;
 
@@ -14,6 +15,10 @@ const startServer = async () => {
     const server = app.listen(PORT, () => {
       logger.info(`Notification service running on port ${PORT} [${process.env.NODE_ENV}]`);
     });
+
+    // Start RabbitMQ consumer in the background.
+    // Non-blocking: if RabbitMQ isn't ready yet it retries automatically.
+    orderConsumer.start();
 
     const gracefulShutdown = (signal) => {
       logger.info(`${signal} received. Shutting down...`);

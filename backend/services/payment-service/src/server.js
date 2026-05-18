@@ -2,6 +2,7 @@ require('dotenv').config();
 const createApp = require('./app');
 const { testConnection } = require('./config/database');
 const { createPaymentsTable } = require('./models/paymentModel');
+const messageBroker = require('./utils/messageBroker');
 const logger = require('./utils/logger');
 
 const PORT = process.env.PORT || 3005;
@@ -11,6 +12,9 @@ const startServer = async () => {
     await testConnection();
     await createPaymentsTable();
     logger.info('Database schema ready');
+
+    // Connect to RabbitMQ (non-blocking — retries in background if not ready yet)
+    messageBroker.connect();
 
     const app = createApp();
     const server = app.listen(PORT, () => {

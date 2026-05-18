@@ -183,6 +183,52 @@ services:
 
   # --- Phase 3 Services ---
 
+  # ── RabbitMQ — Message Broker (Phase 5) ───────────────────────────────────
+  # Used for async event-driven communication between services.
+  # After a payment succeeds, payment-service publishes an event to RabbitMQ
+  # instead of directly calling notification-service. This decouples the two
+  # services — if notifications are down, payments still complete.
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: ecommerce_rabbitmq
+    ports:
+      - "5672:5672"    # AMQP protocol
+      - "15672:15672"  # Management UI (http://localhost:15672, guest/guest)
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-admin123}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── API Gateway (nginx) — Phase 5 ────────────────────────────────────────
+  # Single entry point for all client requests.
+  # Routes /api/auth/* → auth-service, /api/products → product-service, etc.
+  # Centralises rate limiting, logging, and real-IP forwarding.
+  api-gateway:
+    image: nginx:1.27-alpine
+    container_name: ecommerce_gateway
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - auth-service
+      - product-service
+      - order-service
+      - cart-service
+      - payment-service
+      - notification-service
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
   postgres_payments:
     image: postgres:16-alpine
     container_name: ecommerce_pg_payments
@@ -221,9 +267,12 @@ services:
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       ORDER_SERVICE_URL: http://order-service:3003
       NOTIFICATION_SERVICE_URL: http://notification-service:3006
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin123}@rabbitmq:5672
       CORS_ORIGIN: http://localhost:5173
     depends_on:
       postgres_payments:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
   notification-service:
@@ -242,7 +291,11 @@ services:
       SMTP_USER: ${SMTP_USER}
       SMTP_PASS: ${SMTP_PASS}
       EMAIL_FROM: ${EMAIL_FROM:-noreply@ecommerce.local}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-admin}:${RABBITMQ_PASS:-admin123}@rabbitmq:5672
       CORS_ORIGIN: http://localhost:5173
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
 
 # Named volumes — data persists across docker-compose down/up
 volumes:
@@ -251,3 +304,4 @@ volumes:
   pg_orders_data:
   pg_payments_data:
   redis_data:
+  rabbitmq_data:

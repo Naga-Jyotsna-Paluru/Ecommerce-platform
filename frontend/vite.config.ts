@@ -8,12 +8,13 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api/auth':    { target: 'http://localhost:3001', changeOrigin: true },
-      '/api/products':{ target: 'http://localhost:3002', changeOrigin: true },
-      '/api/orders':  { target: 'http://localhost:3003', changeOrigin: true },
-      '/api/cart':    { target: 'http://localhost:3004', changeOrigin: true },
-      '/api/payments':       { target: 'http://localhost:3005', changeOrigin: true },
-      '/api/notifications':  { target: 'http://localhost:3006', changeOrigin: true },
+      // All API traffic is routed through the nginx API Gateway (port 8080).
+      // nginx routes by path prefix to the correct microservice.
+      // This mirrors production: a single entry point for all services.
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
     },
   },
 })

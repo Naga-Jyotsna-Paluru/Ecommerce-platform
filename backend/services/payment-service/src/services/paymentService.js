@@ -1,6 +1,7 @@
 const paymentRepository = require('../repositories/paymentRepository');
 const stripeService     = require('./stripeService');
 const serviceClients    = require('./serviceClients');
+const messageBroker     = require('../utils/messageBroker');
 const logger            = require('../utils/logger');
 
 class PaymentError extends Error {
@@ -106,11 +107,13 @@ const paymentService = {
         });
 
         if (payment) {
-          // Update order status to 'confirmed' in order-service
+          // Update order status to 'confirmed' in order-service (synchronous — critical path)
           await serviceClients.updateOrderStatus(payment.order_id, 'confirmed');
 
-          // Trigger order confirmation email
-          await serviceClients.sendOrderConfirmation({
+          // Publish async event — notification-service will consume and send email.
+          // WHY ASYNC? If the notification service is temporarily down, the payment
+          // still succeeds and the email is delivered once the consumer recovers.
+          await messageBroker.publish('order.payment.succeeded', {
             orderId:     payment.order_id,
             userId:      payment.user_id,
             userEmail:   intent.metadata?.userEmail,
