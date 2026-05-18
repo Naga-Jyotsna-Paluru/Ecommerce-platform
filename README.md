@@ -31,17 +31,17 @@ A production-grade, cloud-native e-commerce platform built with a microservices 
 
 ## Tech Stack
 
-| Category | Technology |
-|---|---|
-| Backend | Node.js, Express.js |
-| Database | PostgreSQL (per service) |
-| Caching | Redis |
-| Auth | JWT (access + refresh token rotation) |
-| Payments | Stripe |
-| Frontend | React, TypeScript, Tailwind CSS |
-| Containerization | Docker, Docker Compose |
-| CI/CD | GitHub Actions |
-| Deployment | Railway / Render + Vercel |
+| Category         | Technology                            |
+| ---------------- | ------------------------------------- |
+| Backend          | Node.js, Express.js                   |
+| Database         | PostgreSQL (per service)              |
+| Caching          | Redis                                 |
+| Auth             | JWT (access + refresh token rotation) |
+| Payments         | Stripe                                |
+| Frontend         | React, TypeScript, Tailwind CSS       |
+| Containerization | Docker, Docker Compose                |
+| CI/CD            | GitHub Actions                        |
+| Deployment       | Railway / Render + Vercel             |
 
 ## Key Features
 
@@ -58,6 +58,7 @@ A production-grade, cloud-native e-commerce platform built with a microservices 
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js >= 18
 - Docker & Docker Compose
 - PostgreSQL (or use Docker)
@@ -89,11 +90,13 @@ npm run dev
 ```
 
 ### Run with Docker (Full Stack)
+
 ```bash
 docker-compose -f docker/docker-compose.yml up --build
 ```
 
 ### Run Tests
+
 ```bash
 cd backend/services/auth-service
 npm test
@@ -103,23 +106,23 @@ npm test
 
 ### Auth Service (Port 3001)
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| POST | `/api/auth/register` | No | Register new user |
-| POST | `/api/auth/login` | No | Login, returns access token |
-| POST | `/api/auth/refresh` | Cookie | Refresh access token |
-| POST | `/api/auth/logout` | Bearer | Revoke refresh token |
-| GET | `/api/auth/me` | Bearer | Get current user profile |
+| Method | Endpoint             | Auth   | Description                 |
+| ------ | -------------------- | ------ | --------------------------- |
+| POST   | `/api/auth/register` | No     | Register new user           |
+| POST   | `/api/auth/login`    | No     | Login, returns access token |
+| POST   | `/api/auth/refresh`  | Cookie | Refresh access token        |
+| POST   | `/api/auth/logout`   | Bearer | Revoke refresh token        |
+| GET    | `/api/auth/me`       | Bearer | Get current user profile    |
 
 ### Product Service (Port 3002)
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| GET | `/api/products` | No | List products (paginated, filterable) |
-| GET | `/api/products/:slug` | No | Get product by slug |
-| POST | `/api/products` | Admin | Create product |
-| PATCH | `/api/products/:id` | Admin | Update product |
-| DELETE | `/api/products/:id` | Admin | Soft-delete product |
+| Method | Endpoint              | Auth  | Description                           |
+| ------ | --------------------- | ----- | ------------------------------------- |
+| GET    | `/api/products`       | No    | List products (paginated, filterable) |
+| GET    | `/api/products/:slug` | No    | Get product by slug                   |
+| POST   | `/api/products`       | Admin | Create product                        |
+| PATCH  | `/api/products/:id`   | Admin | Update product                        |
+| DELETE | `/api/products/:id`   | Admin | Soft-delete product                   |
 
 ## Project Structure
 

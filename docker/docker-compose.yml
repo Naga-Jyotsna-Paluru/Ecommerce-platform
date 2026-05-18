@@ -163,6 +163,26 @@ services:
       product-service:
         condition: service_started
 
+  cart-service:
+    build:
+      context: ../backend/services/cart-service
+      dockerfile: Dockerfile
+    container_name: ecommerce_cart
+    ports:
+      - "3004:3004"
+    environment:
+      NODE_ENV: development
+      PORT: 3004
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-devpassword}
+      CART_TTL_SECONDS: 604800
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-dev_access_secret_change_in_production}
+      CORS_ORIGIN: http://localhost:5173
+    depends_on:
+      redis:
+        condition: service_healthy
+
 # Named volumes — data persists across docker-compose down/up
 volumes:
   pg_auth_data:
