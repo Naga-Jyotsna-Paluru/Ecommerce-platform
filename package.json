@@ -1,0 +1,23 @@
+{
+  "name": "ecommerce-platform",
+  "version": "1.0.0",
+  "description": "Scalable E-Commerce Microservices Platform",
+  "private": true,
+  "workspaces": [
+    "backend/services/*",
+    "frontend"
+  ],
+  "scripts": {
+    "auth": "npm run dev --workspace=backend/services/auth-service",
+    "product": "npm run dev --workspace=backend/services/product-service",
+    "order": "npm run dev --workspace=backend/services/order-service",
+    "payment": "npm run dev --workspace=backend/services/payment-service",
+    "notification": "npm run dev --workspace=backend/services/notification-service",
+    "frontend": "npm run dev --workspace=frontend",
+    "dev:all": "docker-compose up"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

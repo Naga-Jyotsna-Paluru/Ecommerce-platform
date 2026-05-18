@@ -1,0 +1,171 @@
+version: '3.9'
+
+# ============================================================
+# Docker Compose — Local Development Stack
+# Usage: docker-compose up
+# ============================================================
+#
+# This file orchestrates all services together locally.
+# In production, each service runs independently on the cloud.
+#
+# SERVICES:
+# - postgres_auth     : PostgreSQL for auth-service
+# - postgres_products : PostgreSQL for product-service
+# - postgres_orders   : PostgreSQL for order-service
+# - redis             : Shared cache and session store
+# - auth-service      : Port 3001
+# - product-service   : Port 3002
+# - order-service     : Port 3003
+# - payment-service   : Port 3004
+# - notification-svc  : Port 3005
+# ============================================================
+
+services:
+
+  # --- Databases ---
+  # Each service gets its own database — microservices principle:
+  # services do NOT share databases. This ensures true independence.
+
+  postgres_auth:
+    image: postgres:16-alpine
+    container_name: ecommerce_pg_auth
+    environment:
+      POSTGRES_DB: ecommerce_auth
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-devpassword}
+    volumes:
+      - pg_auth_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"   # Host port 5433 → container port 5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres_products:
+    image: postgres:16-alpine
+    container_name: ecommerce_pg_products
+    environment:
+      POSTGRES_DB: ecommerce_products
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-devpassword}
+    volumes:
+      - pg_products_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres_orders:
+    image: postgres:16-alpine
+    container_name: ecommerce_pg_orders
+    environment:
+      POSTGRES_DB: ecommerce_orders
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-devpassword}
+    volumes:
+      - pg_orders_data:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ecommerce_redis
+    command: redis-server --requirepass ${REDIS_PASSWORD:-devpassword}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${REDIS_PASSWORD:-devpassword}", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # --- Application Services ---
+
+  auth-service:
+    build:
+      context: ./backend/services/auth-service
+      dockerfile: Dockerfile
+    container_name: ecommerce_auth
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DB_HOST: postgres_auth
+      DB_PORT: 5432
+      DB_NAME: ecommerce_auth
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD:-devpassword}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-dev_access_secret_change_in_production}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev_refresh_secret_change_in_production}
+      CORS_ORIGIN: http://localhost:5173
+    depends_on:
+      postgres_auth:
+        condition: service_healthy
+    volumes:
+      - ./backend/services/auth-service:/app
+      - /app/node_modules   # Preserve container node_modules
+
+  product-service:
+    build:
+      context: ./backend/services/product-service
+      dockerfile: Dockerfile
+    container_name: ecommerce_products
+    ports:
+      - "3002:3002"
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      DB_HOST: postgres_products
+      DB_PORT: 5432
+      DB_NAME: ecommerce_products
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD:-devpassword}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-dev_access_secret_change_in_production}
+      CORS_ORIGIN: http://localhost:5173
+    depends_on:
+      postgres_products:
+        condition: service_healthy
+
+  order-service:
+    build:
+      context: ./backend/services/order-service
+      dockerfile: Dockerfile
+    container_name: ecommerce_orders
+    ports:
+      - "3003:3003"
+    environment:
+      NODE_ENV: development
+      PORT: 3003
+      DB_HOST: postgres_orders
+      DB_PORT: 5432
+      DB_NAME: ecommerce_orders
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD:-devpassword}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-dev_access_secret_change_in_production}
+      PRODUCT_SERVICE_URL: http://product-service:3002
+      CORS_ORIGIN: http://localhost:5173
+    depends_on:
+      postgres_orders:
+        condition: service_healthy
+      product-service:
+        condition: service_started
+
+# Named volumes — data persists across docker-compose down/up
+volumes:
+  pg_auth_data:
+  pg_products_data:
+  pg_orders_data:
+  redis_data:
