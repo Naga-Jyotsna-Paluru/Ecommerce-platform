@@ -50,7 +50,7 @@ const useAuthStore = create<AuthState>()(
         setItem: (key, value) => sessionStorage.setItem(key, JSON.stringify(value)),
         removeItem: (key) => sessionStorage.removeItem(key),
       },
-      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
+      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated } as unknown as AuthState),
     }
   )
 );

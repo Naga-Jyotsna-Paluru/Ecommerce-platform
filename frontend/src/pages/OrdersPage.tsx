@@ -44,7 +44,7 @@ function OrderCard({ order }: { order: Order }) {
 export default function OrdersPage() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['my-orders'],
-    queryFn: () => ordersApi.getMy().then((r) => r.data.data.orders as Order[]),
+    queryFn: () => ordersApi.getMy().then((r) => r.data.data),
   });
 
   return (
